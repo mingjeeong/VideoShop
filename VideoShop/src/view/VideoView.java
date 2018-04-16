@@ -2,6 +2,7 @@ package view;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -24,10 +25,10 @@ public class VideoView extends JPanel implements ActionListener{
 
 	JComboBox comVideoSearch;
 	JTextField tfVideoSearch;
-	JTable tableVideo;
+	JTable tableVideo;//JTable의 view이름
 
-	VideoTableModel tbModelVideo;
-	VideoModel vm ;
+	VideoTableModel tbModelVideo;//JTable 의 모델
+	VideoModel vm ;//비즈니스모델 jdbc연결
 
 	// ##############################################
 	// constructor method
@@ -62,6 +63,23 @@ public class VideoView extends JPanel implements ActionListener{
 		bVideoDelete.addActionListener(this);
 		bVideoInsert.addActionListener(this);
 		bVideoModify.addActionListener(this);
+		tfVideoSearch.addActionListener(this);
+		tableVideo.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				int row  = tableVideo.getSelectedRow();
+				int col = 0;
+				String data = (String)tableVideo.getValueAt(row, col);
+				int no = Integer.parseInt(data);
+				try {
+					Video video = vm.selectByPk(no);
+					getVideo(video);
+				} catch (SQLException e1) {
+					System.out.println("비디오 정보 가져오기 실패");
+					e1.printStackTrace();
+				}
+				
+			}
+		}); 
 		
 	}
 	
@@ -76,8 +94,67 @@ public class VideoView extends JPanel implements ActionListener{
 				
 		}else if(evt == bVideoInsert ){
 			insertVideo();
+		}else if(evt == tfVideoSearch){//비디오 검색
+			searchVideo();
+		}else if(evt == bVideoModify){
+			modifyVideo();
+		}else if(evt == bVideoDelete){
+			deleteVideo();
 		}
 				
+	}
+	void deleteVideo(){
+		int no = Integer.parseInt(tfVideoNum.getText());
+		try {
+			vm.deleteVideo(no);
+		} catch (SQLException e) {
+			System.out.println("비디오 삭제 오류");
+			e.printStackTrace();
+		}
+	}
+	void modifyVideo(){
+		Video v = new Video();
+		v.setActor(tfVideoActor.getText());
+		v.setDirector(tfVideoDirector.getText());
+		v.setExp(taVideoContent.getText());
+		v.setGenre((String)comVideoJanre.getSelectedItem());
+		v.setVideoName(tfVideoTitle.getText());
+		v.setVideoNo(Integer.parseInt(tfVideoNum.getText()));
+		try {
+			int result = vm.updateVideo(v);
+			if(result == 1){
+				System.out.println("수정 성공");
+			}else{
+				System.out.println("수정실패");
+			}
+		} catch (SQLException e) {
+			System.out.println("비디오 정보 수정 실패");
+			e.printStackTrace();
+		}
+	}
+	void getVideo(Video video){
+		
+		tfVideoNum.setText(video.getVideoNo()+"");
+		tfVideoTitle.setText(video.getVideoName());
+		tfVideoDirector.setText(video.getDirector());
+		tfVideoActor.setText(video.getActor());
+		comVideoJanre.setSelectedItem(video.getGenre());
+		taVideoContent.setText(video.getExp());
+	}
+	
+	void searchVideo(){
+
+		int idx = comVideoSearch.getSelectedIndex();
+		String str = tfVideoSearch.getText();
+		try {
+			ArrayList data = vm.searchVideo(idx,str);
+			tbModelVideo.data = data;
+			tableVideo.setModel(tbModelVideo);
+			tbModelVideo.fireTableDataChanged();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	void insertVideo(){
@@ -208,6 +285,8 @@ public class VideoView extends JPanel implements ActionListener{
 		add(p_east);
 
 	}
+
+	
 
 	// 화면에 테이블 붙이는 메소드
 	class VideoTableModel extends AbstractTableModel {
