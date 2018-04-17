@@ -13,15 +13,17 @@ import model.vo.Video;
 public class VideoModel {
 
 	Connection con;
+	DBCon db;
 
 	public VideoModel() throws Exception {
 
-		String driver = "oracle.jdbc.driver.OracleDriver";
+		/*String driver = "oracle.jdbc.driver.OracleDriver";
 		String url = "jdbc:oracle:thin:@70.12.115.68:1521:orcl";
 		String user = "scott";
 		String pass = "tiger";
 		Class.forName(driver);
-		con = DriverManager.getConnection(url, user, pass);
+		con = DriverManager.getConnection(url, user, pass);*/
+		con = db.getConnection();
 
 	}
 

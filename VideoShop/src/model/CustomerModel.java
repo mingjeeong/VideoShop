@@ -13,18 +13,20 @@ import model.vo.Customer;
 public class CustomerModel {
 
 	Connection con;
+	DBCon db;
 	String pkTel = null;
 
 	public CustomerModel() throws Exception {
 
-		// 1. 드라이버로딩
+		/*// 1. 드라이버로딩
 		String driver = "oracle.jdbc.driver.OracleDriver";
 		String url = "jdbc:oracle:thin:@70.12.115.68:1521:orcl";
 		String user = "scott";
 		String pass = "tiger";
 		// 2. Connection 연결객체 얻어오기
 		Class.forName(driver);
-		con = DriverManager.getConnection(url, user, pass);
+		con = DriverManager.getConnection(url, user, pass);*/
+		con = db.getConnection();
 
 	}
 

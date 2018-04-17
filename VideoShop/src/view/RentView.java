@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
@@ -21,7 +22,9 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
-public class RentView extends JPanel {
+import model.RentModel;
+
+public class RentView extends JPanel implements ActionListener{
 	JTextField tfRentTel, tfRentCustName, tfRentVideoNum;
 	JButton bRent;
 
@@ -29,13 +32,76 @@ public class RentView extends JPanel {
 	JButton bReturn;
 
 	JTable tableRecentList;
-	
 	rentTableModel tbRentModel;
+	
+	RentModel model;
 
 	// ==============================================
 	// 생성자 함수
 	public RentView() {
 		addLayout();
+		eventProc();
+		conDB();
+		searchIsReturnList();
+	}
+	void conDB(){
+		try {
+			model = new RentModel();
+			System.out.println("렌트 디비 연결");
+		} catch (Exception e) {
+			System.out.println("렌트 디비 연결 실패");
+			e.printStackTrace();
+		}
+		
+	}
+	
+	void eventProc(){
+		tfRentTel.addActionListener(this);
+		bRent.addActionListener(this);
+		bReturn.addActionListener(this);
+		
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object evt = e.getSource();
+		if(evt == bRent){
+			String tel = tfRentTel.getText();
+			String videoNum = tfRentVideoNum.getText();
+			try {
+				model.rentVideo(tel,videoNum);
+				System.out.println("대여성공");
+				searchIsReturnList();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}if(evt ==bReturn){
+			String tel = tfReturnVideoNum.getText();
+			try {
+				int result = model.returnVideo(tel);
+				if(result == 1){
+					System.out.println("반납성공");
+					searchIsReturnList();
+				}else{
+					System.out.println(result+": 반납실패");
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+	
+	void searchIsReturnList(){
+		try {
+			ArrayList list = model.searchIsReturnList();
+
+			tbRentModel.data = list;
+			tableRecentList.setModel(tbRentModel);
+			tbRentModel.fireTableDataChanged();
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	void addLayout(){
@@ -45,7 +111,7 @@ public class RentView extends JPanel {
 		tfRentVideoNum = new JTextField();
 		bRent = new JButton("대여");
 
-		tfReturnVideoNum = new JTextField();
+		tfReturnVideoNum = new JTextField(20);
 		bReturn = new JButton("반납");
 		
 		tbRentModel = new rentTableModel();
@@ -67,7 +133,7 @@ public class RentView extends JPanel {
         p_north_west.add(bRent);
         // 위에 오른쪽
         JPanel p_north_east = new JPanel();
-        p_north_east.setLayout(new GridLayout(1, 3));
+        p_north_east.setLayout(new FlowLayout());
         p_north_east.setBorder(new TitledBorder("반납"));
         p_north_east.add(new JLabel("비디오 번호"));
         p_north_east.add(tfReturnVideoNum);
@@ -86,7 +152,7 @@ public class RentView extends JPanel {
 	class rentTableModel extends AbstractTableModel{
 
 		ArrayList data = new ArrayList();
-		String[] columnNames = { "비디오번호", "제목", "고객명", "전화번호", "반납예정일" };
+		String[] columnNames = { "비디오번호", "제목", "고객명", "전화번호", "반납예정일","반납여부" };
 		
 		public int getColumnCount() {
 			return columnNames.length;
@@ -106,5 +172,7 @@ public class RentView extends JPanel {
 		}
 		
 	}
+
+	
 
 }
